@@ -6,7 +6,7 @@ const auth = require("./routes/auth");
 const app = express();
 
 mongoose
-  .connect("mongodb://localhost/Hats", {
+  .connect("mongodb+srv://bilalash:salesforce@123@cluster0.dghlp.mongodb.net/myFirstDatabase?retryWrites=true&w=majority", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
