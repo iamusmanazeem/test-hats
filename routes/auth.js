@@ -4,6 +4,7 @@ const { User } = require("../models/user");
 const _ = require("lodash");
 const router = express.Router();
 const Joi = require("joi");
+const { createSuccessResponse } = require("../middleware/createResponse");
 
 router.post("/", async (req, res) => {
   const { error } = validate(req.body);
@@ -17,7 +18,7 @@ router.post("/", async (req, res) => {
 
   const token = user.generateAuthToken();
 
-  res.send(token);
+  res.send(createSuccessResponse(token));
 });
 
 function validate(req) {

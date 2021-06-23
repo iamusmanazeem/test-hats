@@ -3,17 +3,33 @@ const jwt = require("jsonwebtoken");
 const Joi = require("joi");
 
 const userSchema = new mongoose.Schema({
-  name: {
+  surName: {
+    type: String,
+    maxlength: 50,
+  },
+  firstName:{
     type: String,
     required: true,
-    minlength: 2,
     maxlength: 50,
+  },
+  middleName:{
+    type:String,
+    maxlength:50
+   },
+   phoneNumber:{
+    type:String,
+    required:true,
+    maxlength:50
+  },
+  DOB:{
+    type:String,
   },
   email: {
     type: String,
     required: true,
     minlength: 5,
     maxlength: 255,
+    index: true,
   },
   password: {
     type: String,
@@ -21,23 +37,17 @@ const userSchema = new mongoose.Schema({
     minlength: 5,
     maxlength: 255,
   },
-  address: {
-    type: new mongoose.Schema({
-      city: {
+  city: {
         type: String,
-        required: true,
         trim: true,
         minlength: 5,
         maxlength: 255,
       },
-      street: {
+ street: {
         type: String,
-        required: true,
         trim: true,
         minlength: 5,
         maxlength: 255,
-      },
-    }),
   },
 });
 userSchema.methods.generateAuthToken = function () {
@@ -48,7 +58,11 @@ const User = mongoose.model("User", userSchema);
 
 function validateUser(user) {
   const schema = Joi.object({
-    name: Joi.string().min(2).max(255).required(),
+    surName: Joi.string().max(50),
+    firstName:Joi.string().max(50).required(),
+    middleName:Joi.string().max(50),
+    phoneNumber:Joi.string().max(50).required(),
+    DOB:Joi.string(),
     email: Joi.string().min(5).max(255).required().email(),
     password: Joi.string().min(5).max(255).required(),
     city: Joi.string().min(5).max(255).required(),

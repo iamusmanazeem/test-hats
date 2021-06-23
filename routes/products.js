@@ -1,6 +1,14 @@
 const express = require("express");
-const { Product, validate } = require("../models/product");
+const { Product, validateProduct } = require("../models/product/product");
 const router = express.Router();
+const _ = require("lodash");
+const { createSuccessResponse } = require("../middleware/createResponse");
+const { Category, validateCategory } = require("../models/product/category");
+const {
+  ProductVariation,
+  validateProductVariation,
+} = require("../models/product/productVariation");
+
 /// Get all the products
 router.get("/", async (req, res) => {
   const product = await Product.find();
@@ -9,23 +17,86 @@ router.get("/", async (req, res) => {
 
 // create a product
 router.post("/", async (req, res) => {
-  console.log(req.body);
-  const { error } = validate(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
+  let obj = _.pick(req.body, [
+    "name",
+    "permalink",
+    "skuCode",
+    "category",
+    "panels",
+    "visor",
+    "fabric",
+    "rear",
+    "smallImageURL",
+    "largeImageURL",
+    "size",
+    "color",
+    "quantity",
+    "price",
+    "stockStatus",
+    "message",
+  ]);
+  console.log("product in post", obj.category.length);
 
-  let product = new Product({
-    name: req.body.name,
-    quantity: req.body.quantity,
-    price: req.body.price,
-  });
+  //// find category id by obj.category
+  // category obj
 
-  product = await product.save();
-  res.send(product);
+  // let categoryObj={ name: obj.category }
+  //  const { categoryError } = validateProduct(categoryObj);
+  //   if (categoryError) return res.status(400).send(error.details[0].message);
+
+  // product obj
+  let product;
+  for (let i = 0; i < obj.category.length; i++) {
+    let category = await Category.findOne({ name: obj.category[i] });
+    console.log("category Id", category._id);
+    let productObj = {
+      name: obj.name,
+      permalink: obj.permalink,
+      skuCode: obj.skuCode,
+      categoryId: category._id,
+      panels: obj.panels,
+      visor: obj.visor,
+      fabric: obj.fabric,
+      rear: obj.rear,
+      smallImageURL: obj.smallImageURL,
+      largeImageURL: obj.largeImageURL,
+    };
+    let { productError } = validateProduct(productObj);
+    if (productError) return res.status(400).send(error.details[0].message);
+
+    product = new Product(productObj);
+
+    product = await product.save();
+  }
+
+  console.log("here");
+  // product variation obj
+  let productVariations;
+  for (let i = 0; i < obj.color.length; i++) {
+    let productVariationsObj = {
+      productId: product._id,
+      size: obj.size,
+      color: obj.color[i],
+      quantity: obj.quantity,
+      price: obj.price,
+      stockStatus: obj.stockStatus,
+      message: obj.message,
+    };
+    const { productVariationsError } =
+      validateProductVariation(productVariationsObj);
+    if (productVariationsError)
+      return res.status(400).send(error.details[0].message);
+    productVariations = new ProductVariation(productVariationsObj);
+
+    await productVariations.save();
+  }
+
+  res.send(createSuccessResponse(product));
 });
 
 //update a product
 router.put("/:id", async (req, res) => {
-  const { error } = validate(req.body);
+  const { error } = validateProduct(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
   const product = await Product.findByIdAndUpdate(
@@ -44,7 +115,7 @@ router.put("/:id", async (req, res) => {
     return res.status(404).send("The product of the given id is not found");
   }
 
-  res.send(product);
+  res.send(createSuccessResponse(product));
 });
 
 // get a product by id
@@ -53,7 +124,7 @@ router.get("/:id", async (req, res) => {
   if (!product) {
     return res.status(404).send("The product of the given id is not found");
   }
-  res.send(product);
+  res.send(createSuccessResponse(product));
 });
 
 // delete a product
@@ -62,7 +133,17 @@ router.delete("/:id", async (req, res) => {
   if (!product) {
     return res.status(404).send("The product of the given id is not found");
   }
-  res.send(product);
+  res.send(createSuccessResponse(product));
 });
+
+// Get a Product by category
+
+// router.get("/:category",async(req,res)=>{
+//   const product = await Product.findById(req.);
+//   if (!product) {
+//     return res.status(404).send("The product of the given id is not found");
+//   }
+//   res.send(createSuccessResponse(product));
+// })
 
 module.exports = router;
